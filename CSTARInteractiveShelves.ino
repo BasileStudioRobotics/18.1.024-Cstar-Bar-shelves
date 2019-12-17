@@ -13,7 +13,7 @@ void setup() {
 
 void loop() {
   float range = vl.readLux(VL6180X_ALS_GAIN_5);
-  int Light = map(range, 255, 50, 0, 0);
+  int Light = map(range, 50, 0, 250, 0);
   analogWrite(ledPin, Light);
   Serial.print("Lux: ");
   Serial.println(range);
