@@ -16,7 +16,7 @@ void loop() {
   int Light = map(range, 0, 50, 250, 0);
   analogWrite(ledPin, Light);
   Serial.print("Lux: ");
-  Serial.println(Light);
+  Serial.println(range);
 
     delay(50);
 }
