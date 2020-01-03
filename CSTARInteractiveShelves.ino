@@ -1,7 +1,7 @@
 #include <Ultrasonic.h>
 
 //Object delare and pin Setting
-Ultrasonic ultrasonic(11, 12);
+Ultrasonic ultrasonic(3, 2);   //(Trig, Echo)
 
 //--pin setup--//
 //Motor Driver
