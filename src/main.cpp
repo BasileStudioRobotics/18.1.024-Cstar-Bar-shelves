@@ -1,3 +1,9 @@
+/*
+ April 2, 2021  -> Bobby will bring latest code he has on Monday
+                -> Do not upload this code into bar shelves until confirmation is made about being the latest code made
+                -> Toggle Switch integration when MOVING DOWN & ANIMATE
+*/
+
 #include <Arduino.h>
 #include <Ultrasonic.h>
 
