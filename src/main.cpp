@@ -2,15 +2,34 @@
  April 2, 2021  -> Bobby will bring latest code he has on Monday
                 -> Do not upload this code into bar shelves until confirmation is made about being the latest code made
                 -> Toggle Switch integration when MOVING DOWN & ANIMATE
+
+ April 14, 2021 -> Below is latest code as per Bobby and Edgar
+                -> Adding Toggle Switch functionality
+                          ----
+                          | 1 |-- Animate(go down,wait, go up)
+                          | 2 |---- OFF
+                          | 3 |-- go Down
+                          ----
+  April 30, 2021 -> Integrating Debounce funtion to switch
 */
 
 #include <Arduino.h>
 #include <Ultrasonic.h>
+#include <Bounce2.h>
 
 //Object delare and pin Setting
 Ultrasonic ultrasonic(3, 2); // (trig, echo)
 
+Bounce DebounceUP = Bounce();
+Bounce DebounceDOWN = Bounce();
+
+//Functions calling
+void print_status();
+float PWM_Increase_Forward();
+float PWM_Increase_Reverse();
 void Move_Forward();
+void Move_Reverse();
+void Motor_Stop();
 
 //--pin setup--//
 //Motor Driver
@@ -22,6 +41,8 @@ const int MotorCS = A5;
 //Toggle Switch Configuration
 const int TogglePin1 = 9;
 const int TogglePin2 = 11;
+int ToggleUP;
+int ToggleDOWN;
 
 //--global variables--//
 //Motor Controller
@@ -64,11 +85,21 @@ void setup()
   digitalWrite(MotorInB, LOW);
   digitalWrite(MotorEnA, LOW);
   digitalWrite(MotorEnB, LOW);
+
+  DebounceUP.attach(TogglePin1, INPUT_PULLUP);
+  DebounceUP.interval(5);
+  DebounceDOWN.attach(TogglePin2, INPUT_PULLUP);
+  DebounceDOWN.interval(5);
 }
 
 void loop()
 {
   distance = ultrasonic.read();
+  DebounceUP.update();
+  DebounceDOWN.update();
+
+  ToggleUP = DebounceUP.read();
+  ToggleDOWN = DebounceDOWN.read();
 
   // Hand moving CLOSER to sensor = [CLOSE shelves]
   if ((distance > 7) && (distance < distance_limit) && (distance <= distHOLD))
@@ -98,8 +129,11 @@ void loop()
   }
 
   //--READ COUNTS--//
-  if (countDOWN == 4)
+
+  // Shelves go Down[OPEN]
+  if (/*(countDOWN == 4)  || */ (ToggleDOWN == 0))
   {
+    Serial.println("Bajando");
     PWM_Increase_Forward();
     countDOWN = 0;
     countUP = 0;
@@ -108,8 +142,10 @@ void loop()
     delay(1000); // wait 1 sec
   }
 
+  //Shelves go Up[CLOSE] or Toggle switch is in position 3
   if (countUP == 4)
   {
+    Serial.println("Subiendo");
     PWM_Increase_Reverse();
     countDOWN = 0;
     countUP = 0;
@@ -118,10 +154,12 @@ void loop()
     delay(1000); // wait 1 sec
   }
 
-  if (countCYCLE == 6)
+  //Shelves Animate(go Down, wait, go Up) or Toggle Switch is in Position 1
+  if (/*(countCYCLE == 6) || */ (ToggleUP == 0))
   {
+    Serial.println("Bailando");
     PWM_Increase_Reverse();
-    delay(20000); // Shelf stays down for 20s
+    delay(5000); // Shelf stays down for 20s
     PWM_Increase_Forward();
     countDOWN = 0;
     countUP = 0;
@@ -131,31 +169,47 @@ void loop()
   }
 
   //RESET COUNTS//
-
-  if (distance > 40)
+  if ((distance > 40) || (ToggleUP && ToggleDOWN == 1))
   { // If no hand sensed, reset.
+    Serial.println("Esperando");
     countDOWN = 0;
     countUP = 0;
     countCYCLE = 0;
   }
 
+  print_status();
   // Hold last distance reading
-
-  Serial.print("Distance in CM: ");
-  Serial.println(distance);
-  Serial.print("HOLDING DiST: ");
-  Serial.println(distHOLD);
-  Serial.print("Down Count: ");
-  Serial.println(countDOWN);
-  Serial.print("UP Count: ");
-  Serial.println(countUP);
-  Serial.print("Cycle Count: ");
-  Serial.println(countCYCLE);
-  Serial.print("Speed: ");
-  Serial.println(Motor_Speed);
-
   distHOLD = distance;
   delay(50); // overall delay
+}
+
+
+void print_status()
+{
+  // Serial.print("Distance in CM: ");
+  // Serial.print(distance);
+  // Serial.print("\t");
+  // Serial.print("HOLDING DiST: ");
+  // Serial.print(distHOLD);
+  // Serial.print("\t");
+  // Serial.print(" Down Count: ");
+  // Serial.print(countDOWN);
+  // Serial.print("\t");
+  // Serial.print("UP Count: ");
+  // Serial.print(countUP);
+  // Serial.print("\t");
+  // Serial.print("Cycle Count: ");
+  // Serial.print(countCYCLE);
+  // Serial.print("\t");
+  // Serial.print("Speed: ");
+  // Serial.println(Motor_Speed);
+
+  Serial.print("Down Toggle Pos: ");
+  Serial.print(ToggleDOWN);
+  Serial.print("\t");
+  Serial.print("Up Toogle Pos: ");
+  Serial.println(ToggleUP);
+  return;
 }
 
 float PWM_Increase_Forward()
@@ -165,7 +219,7 @@ float PWM_Increase_Forward()
     Motor_Speed = i;
     Move_Forward();
     speedRate = speedRate * Rate;
-    Serial.println(Motor_Speed);
+    //Serial.println(Motor_Speed);
     delay(DELAY);
   }
   delay(15500);
@@ -174,7 +228,7 @@ float PWM_Increase_Forward()
     Motor_Speed = i;
     Move_Forward();
     speedRate = speedRate * Rate;
-    Serial.println(Motor_Speed);
+    //Serial.println(Motor_Speed);
     delay(DELAY);
   }
 }
@@ -186,7 +240,7 @@ float PWM_Increase_Reverse()
     Motor_Speed = i;
     Move_Reverse();
     speedRate = speedRate * Rate;
-    Serial.println(Motor_Speed);
+    //Serial.println(Motor_Speed);
     delay(DELAY);
   }
   delay(12000);
@@ -195,7 +249,7 @@ float PWM_Increase_Reverse()
     Motor_Speed = i;
     Move_Reverse();
     speedRate = speedRate * Rate;
-    Serial.println(Motor_Speed);
+    //Serial.println(Motor_Speed);
     delay(DELAY);
   }
 }
@@ -211,6 +265,7 @@ void Move_Forward()
   analogWrite(MotorPWM, NewSpeed);
   //Serial.println("avanzando");
 }
+
 void Move_Reverse()
 { // Retract Shelf
   NewSpeed = Motor_Speed;
@@ -221,6 +276,7 @@ void Move_Reverse()
   analogWrite(MotorPWM, NewSpeed);
   //Serial.println("retrocediendo");
 }
+
 void Motor_Stop()
 { // Motor stops no matter what direction its going
   digitalWrite(MotorEnA, HIGH);
