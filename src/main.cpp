@@ -68,6 +68,13 @@ int distance_limit = 30; // limit for reading values
 void setup()
 {
   Serial.begin(9600);
+  Serial.println("Estoy Despertando");
+
+  DebounceUP.attach(TogglePin1, INPUT_PULLUP);
+  DebounceUP.interval(5);
+  DebounceDOWN.attach(TogglePin2, INPUT_PULLUP);
+  DebounceDOWN.interval(5);
+
   //Pin calling for Motor Controller
   pinMode(MotorInA, OUTPUT);
   pinMode(MotorInB, OUTPUT);
@@ -77,8 +84,8 @@ void setup()
   pinMode(MotorCS, INPUT);
 
   //Pin calling for Toggle Switch
-  pinMode(TogglePin1, OUTPUT);
-  pinMode(TogglePin2, OUTPUT);
+  // pinMode(TogglePin1, OUTPUT);
+  // pinMode(TogglePin2, OUTPUT);
 
   //Motor Controller
   digitalWrite(MotorInA, LOW);
@@ -86,21 +93,18 @@ void setup()
   digitalWrite(MotorEnA, LOW);
   digitalWrite(MotorEnB, LOW);
 
-  DebounceUP.attach(TogglePin1, INPUT_PULLUP);
-  DebounceUP.interval(5);
-  DebounceDOWN.attach(TogglePin2, INPUT_PULLUP);
-  DebounceDOWN.interval(5);
+  Serial.println("Terminé de despertar");
 }
 
 void loop()
 {
-  distance = ultrasonic.read();
   DebounceUP.update();
   DebounceDOWN.update();
-
+  distance = ultrasonic.read();
   ToggleUP = DebounceUP.read();
   ToggleDOWN = DebounceDOWN.read();
 
+  print_status();
   // Hand moving CLOSER to sensor = [CLOSE shelves]
   if ((distance > 7) && (distance < distance_limit) && (distance <= distHOLD))
   {
@@ -131,7 +135,7 @@ void loop()
   //--READ COUNTS--//
 
   // Shelves go Down[OPEN]
-  if (/*(countDOWN == 4)  || */ (ToggleDOWN == 0))
+  if ((countDOWN == 4) || (ToggleDOWN == 0))
   {
     Serial.println("Bajando");
     PWM_Increase_Forward();
@@ -155,7 +159,7 @@ void loop()
   }
 
   //Shelves Animate(go Down, wait, go Up) or Toggle Switch is in Position 1
-  if (/*(countCYCLE == 6) || */ (ToggleUP == 0))
+  if ((countCYCLE == 6) || (ToggleUP == 0))
   {
     Serial.println("Bailando");
     PWM_Increase_Reverse();
@@ -177,12 +181,10 @@ void loop()
     countCYCLE = 0;
   }
 
-  print_status();
   // Hold last distance reading
   distHOLD = distance;
   delay(50); // overall delay
 }
-
 
 void print_status()
 {
