@@ -11,6 +11,8 @@
                           | 3 |-- go Down
                           ----
   April 30, 2021 -> Integrating Debounce funtion to switch
+
+  July 12, 2021 -> Testing Control switch box code with main code
 */
 
 #include <Arduino.h>
@@ -188,24 +190,24 @@ void loop()
 
 void print_status()
 {
-  // Serial.print("Distance in CM: ");
-  // Serial.print(distance);
-  // Serial.print("\t");
-  // Serial.print("HOLDING DiST: ");
-  // Serial.print(distHOLD);
-  // Serial.print("\t");
-  // Serial.print(" Down Count: ");
-  // Serial.print(countDOWN);
-  // Serial.print("\t");
-  // Serial.print("UP Count: ");
-  // Serial.print(countUP);
-  // Serial.print("\t");
-  // Serial.print("Cycle Count: ");
-  // Serial.print(countCYCLE);
-  // Serial.print("\t");
-  // Serial.print("Speed: ");
-  // Serial.println(Motor_Speed);
-
+  Serial.print("Distance in CM: ");
+  Serial.print(distance);
+  Serial.print("\t");
+  Serial.print("HOLDING DiST: ");
+  Serial.print(distHOLD);
+  Serial.print("\t");
+  Serial.print(" Down Count: ");
+  Serial.print(countDOWN);
+  Serial.print("\t");
+  Serial.print("UP Count: ");
+  Serial.print(countUP);
+  Serial.print("\t");
+  Serial.print("Cycle Count: ");
+  Serial.print(countCYCLE);
+  Serial.print("\t");
+  Serial.print("Speed: ");
+  Serial.print(Motor_Speed);
+  Serial.print("\t");
   Serial.print("Down Toggle Pos: ");
   Serial.print(ToggleDOWN);
   Serial.print("\t");
