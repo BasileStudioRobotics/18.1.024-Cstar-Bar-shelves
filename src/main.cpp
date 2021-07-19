@@ -12,7 +12,7 @@
                           ----
   April 30, 2021 -> Integrating Debounce funtion to switch
 
-  July 12, 2021 -> Testing Control switch box code with main code
+  July 19, 2021 -> Testing Control switch box code with main code for compability
 */
 
 #include <Arduino.h>
@@ -50,6 +50,7 @@ int ToggleDOWN;
 //Motor Controller
 float Motor_Speed;
 float NewSpeed;
+bool shelfDown = false;
 //float sensorValue, current; //
 //int waitingTime = 1000;     //
 //int maxCurrentLimit = 300;  // if Current sensor is used
@@ -57,8 +58,8 @@ float NewSpeed;
 //bool Jamming = false;       //
 
 //ultrasonic sensor
-int distance;            // Ultrasonic reading
-int distHOLD = 40;       // Last Ultrasonic reading
+int distance; // Ultrasonic reading
+//int distHOLD = 40;       // Last Ultrasonic reading
 float speedRate = 15;    // PWM speed rate increment
 int DELAY = 150;         // Delay between increase
 float Rate = 1.03;       // Rate for ramp up
@@ -72,11 +73,6 @@ void setup()
   Serial.begin(9600);
   Serial.println("Estoy Despertando");
 
-  DebounceUP.attach(TogglePin1, INPUT_PULLUP);
-  DebounceUP.interval(5);
-  DebounceDOWN.attach(TogglePin2, INPUT_PULLUP);
-  DebounceDOWN.interval(5);
-
   //Pin calling for Motor Controller
   pinMode(MotorInA, OUTPUT);
   pinMode(MotorInB, OUTPUT);
@@ -86,8 +82,10 @@ void setup()
   pinMode(MotorCS, INPUT);
 
   //Pin calling for Toggle Switch
-  // pinMode(TogglePin1, OUTPUT);
-  // pinMode(TogglePin2, OUTPUT);
+  DebounceUP.attach(TogglePin1, INPUT_PULLUP);
+  DebounceUP.interval(5);
+  DebounceDOWN.attach(TogglePin2, INPUT_PULLUP);
+  DebounceDOWN.interval(5);
 
   //Motor Controller
   digitalWrite(MotorInA, LOW);
@@ -100,15 +98,15 @@ void setup()
 
 void loop()
 {
+  distance = ultrasonic.read();
   DebounceUP.update();
   DebounceDOWN.update();
-  distance = ultrasonic.read();
   ToggleUP = DebounceUP.read();
   ToggleDOWN = DebounceDOWN.read();
 
   print_status();
   // Hand moving CLOSER to sensor = [CLOSE shelves]
-  if ((distance > 7) && (distance < distance_limit) && (distance <= distHOLD))
+  if ((distance > 7) && (distance < distance_limit) && (shelfDown != true))
   {
     countDOWN++;
     countUP = 0;
@@ -117,7 +115,7 @@ void loop()
   }
 
   // Hand moving AWAY from sensor = [OPEN shelves]
-  if ((distance > 7) && (distance < distance_limit) && (distance >= distHOLD))
+  if ((distance > 7) && (distance < distance_limit) && (shelfDown == true))
   {
     countUP++;
     countDOWN = 0;
@@ -134,8 +132,10 @@ void loop()
     delay(100);
   }
 
-  //--READ COUNTS--//
-
+  ///////////////////
+  //  READ COUNTS  //
+  ///////////////////
+  
   // Shelves go Down[OPEN]
   if ((countDOWN == 4) || (ToggleDOWN == 0))
   {
@@ -145,6 +145,9 @@ void loop()
     countUP = 0;
     countCYCLE = 0;
     speedRate = 15;
+    shelfDown = true;
+    DebounceUP.update();
+    DebounceDOWN.update();
     delay(1000); // wait 1 sec
   }
 
@@ -157,6 +160,7 @@ void loop()
     countUP = 0;
     countCYCLE = 0;
     speedRate = 15;
+    shelfDown = false;
     delay(1000); // wait 1 sec
   }
 
@@ -171,11 +175,13 @@ void loop()
     countUP = 0;
     countCYCLE = 0;
     speedRate = 15;
+    DebounceUP.update();
+    DebounceDOWN.update();
     delay(1000); // wait 1 sec
   }
 
   //RESET COUNTS//
-  if ((distance > 40) || (ToggleUP && ToggleDOWN == 1))
+  if ((distance > 40) && (ToggleUP && ToggleDOWN == 1))
   { // If no hand sensed, reset.
     Serial.println("Esperando");
     countDOWN = 0;
@@ -184,7 +190,7 @@ void loop()
   }
 
   // Hold last distance reading
-  distHOLD = distance;
+  // distHOLD = distance;
   delay(50); // overall delay
 }
 
@@ -193,17 +199,17 @@ void print_status()
   Serial.print("Distance in CM: ");
   Serial.print(distance);
   Serial.print("\t");
-  Serial.print("HOLDING DiST: ");
-  Serial.print(distHOLD);
-  Serial.print("\t");
-  Serial.print(" Down Count: ");
+  // Serial.print("HOLDING DiST: ");
+  // Serial.print(distHOLD);
+  // Serial.print("\t");
+  Serial.print("Down Count: ");
   Serial.print(countDOWN);
   Serial.print("\t");
   Serial.print("UP Count: ");
   Serial.print(countUP);
   Serial.print("\t");
-  Serial.print("Cycle Count: ");
-  Serial.print(countCYCLE);
+  Serial.print("bool_shelfDown: ");
+  Serial.print(shelfDown);
   Serial.print("\t");
   Serial.print("Speed: ");
   Serial.print(Motor_Speed);
