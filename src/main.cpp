@@ -135,7 +135,7 @@ void loop()
   ///////////////////
   //  READ COUNTS  //
   ///////////////////
-  
+
   // Shelves go Down[OPEN]
   if ((countDOWN == 4) || (ToggleDOWN == 0))
   {
@@ -207,6 +207,9 @@ void print_status()
   Serial.print("\t");
   Serial.print("UP Count: ");
   Serial.print(countUP);
+  Serial.print("\t");
+  Serial.print("Cycle Count: ");
+  Serial.print(countCYCLE);
   Serial.print("\t");
   Serial.print("bool_shelfDown: ");
   Serial.print(shelfDown);
