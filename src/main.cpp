@@ -140,7 +140,7 @@ void loop()
   if ((countDOWN == 4) || (ToggleDOWN == 0))
   {
     Serial.println("Bajando");
-    PWM_Increase_Forward();
+    PWM_Increase_Reverse();
     countDOWN = 0;
     countUP = 0;
     countCYCLE = 0;
@@ -155,7 +155,7 @@ void loop()
   if (countUP == 4)
   {
     Serial.println("Subiendo");
-    PWM_Increase_Reverse();
+    PWM_Increase_Forward();
     countDOWN = 0;
     countUP = 0;
     countCYCLE = 0;
